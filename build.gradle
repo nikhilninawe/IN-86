@@ -28,6 +28,9 @@ targetCompatibility = 1.8
 dependencies {
     compile("org.springframework.boot:spring-boot-starter")
     compile("org.springframework.boot:spring-boot-starter-web")
-    compile("org.springframework:spring-jdbc")
+    compile("org.springframework.boot:spring-boot-starter-data-jpa")
+    compile 'mysql:mysql-connector-java'
     testCompile("junit:junit")
+    compileOnly 'org.projectlombok:lombok:1.18.4'
+//    apt 'org.projectlombok:lombok:1.18.4'
 }
