@@ -31,6 +31,9 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter-data-jpa")
     compile 'mysql:mysql-connector-java'
     testCompile("junit:junit")
-    compileOnly 'org.projectlombok:lombok:1.18.4'
-//    apt 'org.projectlombok:lombok:1.18.4'
+    compileOnly 'org.projectlombok:lombok:1.16.18'
+    annotationProcessor 'org.projectlombok:lombok:1.16.18'
+
+//    apt "org.projectlombok:lombok:1.16.18"
+    compile group: 'com.github.miwurster', name: 'spring-data-influxdb', version: '1.8'
 }

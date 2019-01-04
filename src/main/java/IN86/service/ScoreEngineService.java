@@ -1,4 +1,4 @@
-package IN86.controller;
+package IN86.service;
 
 import IN86.main.Application;
 import org.slf4j.Logger;

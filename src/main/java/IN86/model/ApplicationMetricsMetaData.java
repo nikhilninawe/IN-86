@@ -12,7 +12,7 @@ import javax.persistence.Id;
 public class ApplicationMetricsMetaData {
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
-    private Integer id;
+    private Long id;
     private String metric;
     private long goodValue;
     private long criticalValue;
