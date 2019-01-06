@@ -1,14 +1,16 @@
 package IN86.service;
 
 import IN86.computation.DecisionEngine;
-import IN86.computation.MetricScoreComputation;
-import IN86.domain.MetricScore;
+import IN86.computation.ScoreComputation;
+import IN86.domain.MetricScoreDomain;
+import IN86.model.MetricScore;
 import org.influxdb.dto.Point;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.influxdb.InfluxDBTemplate;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
@@ -17,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class TestService {
 
     @Autowired
-    private MetricScoreComputation metricScoreComputation;
+    private ScoreComputation scoreComputation;
 
     @Autowired
     private InfluxDBTemplate<Point> influxDBTemplate;
@@ -27,27 +29,37 @@ public class TestService {
 
     @RequestMapping("/data")
     public void populateTestData(){
-        Point point1 = Point.measurement("metric_data")
-                .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
-                .addField("value", 50.02)
-                .tag("metric", "cpu")
-                .build();
-        Point point2 = Point.measurement("metric_data")
-                .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
-                .addField("value", 70.02)
-                .tag("metric", "cpu")
-                .build();
-        influxDBTemplate.write(point1);
-        influxDBTemplate.write(point2);
+        for(int i=0; i < 100; i++ ) {
+//            Point point1 = Point.measurement("metric_data")
+//                    .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+//                    .addField("value", Math.random() * 100)
+//                    .tag("metric", "cpu")
+//                    .tag("env", "rehearsal")
+//                    .tag("role", "orders")
+//                    .tag("stack", "india")
+//                    .tag("host", "I1")
+//                    .build();
+//            influxDBTemplate.write(point1);
+
+            Point point1 = Point.measurement("service_score")
+                    .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                    .addField("score", Math.random())
+//                    .tag("metric", "cpu")
+                    .tag("env", "rehearsal")
+                    .tag("role", "orders")
+                    .tag("stack", "india")
+//                    .tag("host", "I1")
+                    .build();
+            influxDBTemplate.write(point1);
+        }
     }
 
     @RequestMapping("/score")
-    public MetricScore getScore(){
-        MetricScore metricScore = metricScoreComputation.computeMetricScore("cpu");
-        double instanceScore = metricScoreComputation.computeInstanceScore("I1", Arrays.asList(metricScore));
+    public MetricScoreDomain getScore(){
+        MetricScoreDomain metricScoreDomain = scoreComputation.computeMetricScore("cpu");
+        double instanceScore = scoreComputation.computeInstanceScore("I1", Arrays.asList(metricScoreDomain));
         System.out.println(instanceScore);
         decisionEngine.makeDecision("I1", instanceScore);
-        return metricScore;
+        return metricScoreDomain;
     }
-
 }

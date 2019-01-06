@@ -12,3 +12,5 @@ spring:
     url: jdbc:mysql://localhost:3306/turvo?useSSL=false
     username: root
     password: turvo
+server:
+  port: 8081

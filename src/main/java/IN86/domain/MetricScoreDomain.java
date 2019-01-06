@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class MetricScore {
+public class MetricScoreDomain {
     String metric;
     double weight;
     double score;

@@ -1,4 +1,4 @@
-package IN86.domain;
+package IN86.model;
 
 import lombok.Data;
 import org.influxdb.annotation.Column;
@@ -18,5 +18,10 @@ public class MetricData {
 
     @Column(name = "value")
     private double value;
+
+    String env;
+    String role;
+    String stack;
+    String host;
 
 }
