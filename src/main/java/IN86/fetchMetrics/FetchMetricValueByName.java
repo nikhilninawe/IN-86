@@ -1,5 +1,6 @@
 package IN86.fetchMetrics;
 
+import IN86.main.Application;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
@@ -8,6 +9,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,7 +18,9 @@ import java.util.List;
 
 import static IN86.main.AppConfiguration.BASE_METRICS_URLS;
 
-public class fetchMetricValueByName {
+public class FetchMetricValueByName {
+
+    private static final Logger logger = LoggerFactory.getLogger(FetchMetricValueByName.class);
 
     public static List<MetricDetails> fetchCPUUsageMetric() {
         String metric = "system.cpu.usage";
@@ -89,7 +94,11 @@ public class fetchMetricValueByName {
         String responseString=  EntityUtils.toString(response.getEntity(),"UTF-8");
         JSONObject responseJSON = new JSONObject(responseString);
 
-        value = (double) ((JSONObject)((JSONArray) responseJSON.get("measurements")).get(0)).get("value");
+        try {
+            value = (double) ((JSONObject) ((JSONArray) responseJSON.get("measurements")).get(0)).get("value");
+        }catch (Exception ex){
+            logger.error("Got exception for metric " + metricName + " with value " + ((JSONObject) ((JSONArray) responseJSON.get("measurements")).get(0)) );
+        }
         return value;
     }
 }

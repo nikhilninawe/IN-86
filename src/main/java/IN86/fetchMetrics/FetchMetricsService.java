@@ -43,13 +43,13 @@ public class FetchMetricsService {
         instanceScoreMap = new HashMap<>();
         serviceScoreMap = new HashMap<>();
 
-        List<MetricDetails> cpuMetricDetails = fetchMetricValueByName.fetchCPUUsageMetric();
+        List<MetricDetails> cpuMetricDetails = FetchMetricValueByName.fetchCPUUsageMetric();
         writeMetricDetailsToInflux(cpuMetricDetails);
 
-        List<MetricDetails> logErrorMetricDetails = fetchMetricValueByName.fetchErrorLogMetric();
+        List<MetricDetails> logErrorMetricDetails = FetchMetricValueByName.fetchErrorLogMetric();
         writeMetricDetailsToInflux(logErrorMetricDetails);
 
-        List<MetricDetails> gcMetricDetails = fetchMetricValueByName.fetchMajorGCMetric();
+        List<MetricDetails> gcMetricDetails = FetchMetricValueByName.fetchMajorGCMetric();
         writeMetricDetailsToInflux(gcMetricDetails);
 
         writeInstanceScoreToInflux();
