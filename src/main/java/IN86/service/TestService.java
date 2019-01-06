@@ -1,6 +1,7 @@
 package IN86.service;
 
 import IN86.computation.MetricScoreComputation;
+import IN86.domain.MetricScore;
 import org.influxdb.dto.Point;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.influxdb.InfluxDBTemplate;
@@ -36,7 +37,7 @@ public class TestService {
     }
 
     @RequestMapping("/score")
-    public double getScore(){
+    public MetricScore getScore(){
         return metricScoreComputation.computeMetricScore("cpu");
     }
 

@@ -1,7 +1,7 @@
 package IN86.computation;
 
 import IN86.domain.MetricData;
-import IN86.main.Application;
+import IN86.domain.MetricScore;
 import IN86.model.ApplicationMetricsMetaData;
 import IN86.repository.ApplicationMetricsMetaDataRepo;
 import org.influxdb.dto.Point;
@@ -32,13 +32,27 @@ public class MetricScoreComputation {
 
     String dbName = "telegraf";
 
-    public double computeMetricScore(String metric){
+    public MetricScore computeMetricScore(String metric){
         ApplicationMetricsMetaData metricsMetaData = metricsMetaDataRepo.findApplicationMetricsMetaDataRepoByMetric(metric);
         Query query = new Query("SELECT * FROM metric_data order by time desc limit 2", dbName);
         QueryResult result = influxDBTemplate.query(query);
         InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
         List<MetricData> data = resultMapper.toPOJO(result, MetricData.class);
-        double currentValue = data.get(0).getValue();
-        return (currentValue - metricsMetaData.getGoodValue())/(metricsMetaData.getCriticalValue() - metricsMetaData.getGoodValue());
+        double currentValue;
+        if (metricsMetaData.isLinear()) {
+            currentValue = data.get(0).getValue();
+        }else{
+            currentValue = data.get(0).getValue() - data.get(1).getValue();
+        }
+        double score = (currentValue - metricsMetaData.getGoodValue())/(metricsMetaData.getCriticalValue() - metricsMetaData.getGoodValue());
+        return new MetricScore(metric, metricsMetaData.getWeight(), score);
+    }
+
+    public double computeInstanceScore(String instance, List<MetricScore> metricScores){
+        double instanceScore = 0;
+        for(MetricScore metricScore : metricScores){
+            instanceScore += metricScore.getScore()*metricScore.getWeight();
+        }
+        return instanceScore;
     }
 }
