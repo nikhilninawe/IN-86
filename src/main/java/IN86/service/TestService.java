@@ -54,12 +54,12 @@ public class TestService {
         }
     }
 
-    @RequestMapping("/score")
-    public MetricScoreDomain getScore(){
-        MetricScoreDomain metricScoreDomain = scoreComputation.computeMetricScore("cpu");
-        double instanceScore = scoreComputation.computeInstanceScore("I1", Arrays.asList(metricScoreDomain));
-        System.out.println(instanceScore);
-        decisionEngine.makeDecision("I1", instanceScore);
-        return metricScoreDomain;
-    }
+//    @RequestMapping("/score")
+//    public MetricScoreDomain getScore(){
+//        MetricScoreDomain metricScoreDomain = scoreComputation.computeMetricScore("cpu");
+//        double instanceScore = scoreComputation.computeInstanceScore("I1", Arrays.asList(metricScoreDomain));
+//        System.out.println(instanceScore);
+//        decisionEngine.makeDecision("I1", instanceScore);
+//        return metricScoreDomain;
+//    }
 }
