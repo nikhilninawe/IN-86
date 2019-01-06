@@ -50,9 +50,11 @@ public class MetricScoreComputation {
 
     public double computeInstanceScore(String instance, List<MetricScore> metricScores){
         double instanceScore = 0;
+        double weightSum = 0;
         for(MetricScore metricScore : metricScores){
             instanceScore += metricScore.getScore()*metricScore.getWeight();
+            weightSum += metricScore.getWeight();
         }
-        return instanceScore;
+        return instanceScore/weightSum;
     }
 }

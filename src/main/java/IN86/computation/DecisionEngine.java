@@ -8,13 +8,13 @@ public class DecisionEngine {
 
     @Autowired
     DecisionEngineActions decisionEngineActions;
-    double threshold  =1 ;
+    double threshold = 1;
 
     public void makeDecision(String instance, double score){
         if (score >  threshold){
-            decisionEngineActions.quarantine();
+            decisionEngineActions.quarantine(instance, score);
         }else if (score > 0 && score < threshold) {
-            decisionEngineActions.sendAlert();
+            decisionEngineActions.sendAlert(instance, score);
         }else{
             //do nothing
         }

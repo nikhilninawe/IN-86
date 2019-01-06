@@ -1,5 +1,6 @@
 package IN86.service;
 
+import IN86.computation.DecisionEngine;
 import IN86.computation.MetricScoreComputation;
 import IN86.domain.MetricScore;
 import org.influxdb.dto.Point;
@@ -8,6 +9,7 @@ import org.springframework.data.influxdb.InfluxDBTemplate;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 @RestController
@@ -19,6 +21,9 @@ public class TestService {
 
     @Autowired
     private InfluxDBTemplate<Point> influxDBTemplate;
+
+    @Autowired
+    private DecisionEngine decisionEngine;
 
     @RequestMapping("/data")
     public void populateTestData(){
@@ -38,7 +43,11 @@ public class TestService {
 
     @RequestMapping("/score")
     public MetricScore getScore(){
-        return metricScoreComputation.computeMetricScore("cpu");
+        MetricScore metricScore = metricScoreComputation.computeMetricScore("cpu");
+        double instanceScore = metricScoreComputation.computeInstanceScore("I1", Arrays.asList(metricScore));
+        System.out.println(instanceScore);
+        decisionEngine.makeDecision("I1", instanceScore);
+        return metricScore;
     }
 
 }

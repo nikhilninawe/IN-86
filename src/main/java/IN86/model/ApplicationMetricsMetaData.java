@@ -19,6 +19,6 @@ public class ApplicationMetricsMetaData {
     private String metric;
     private long goodValue;
     private long criticalValue;
-    private long weight;
+    private double weight;
     private boolean simple; // cpu is linear, but gc is not
 }
