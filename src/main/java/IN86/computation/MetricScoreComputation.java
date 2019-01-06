@@ -33,7 +33,7 @@ public class MetricScoreComputation {
     String dbName = "telegraf";
 
     public MetricScore computeMetricScore(String metric){
-        ApplicationMetricsMetaData metricsMetaData = metricsMetaDataRepo.findApplicationMetricsMetaDataRepoByMetric(metric);
+        ApplicationMetricsMetaData metricsMetaData = metricsMetaDataRepo.findApplicationMetricsMetaDataByMetric(metric);
         Query query = new Query("SELECT * FROM metric_data order by time desc limit 2", dbName);
         QueryResult result = influxDBTemplate.query(query);
         InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
