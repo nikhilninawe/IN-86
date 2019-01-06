@@ -7,7 +7,7 @@ spring:
     retention-policy: autogen
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: none
   datasource:
     url: jdbc:mysql://localhost:3306/turvo?useSSL=false
     username: root

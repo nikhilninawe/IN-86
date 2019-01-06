@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.influxdb.InfluxDBTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -38,7 +39,7 @@ public class ScoreComputation {
         String metric = metricDetails.getMetric();
         String host = metricDetails.getHost();
         ApplicationMetricsMetaData metricsMetaData = metricsMetaDataRepo.findApplicationMetricsMetaDataByMetric(metric);
-        Query query = new Query("SELECT * FROM metric_data where host = '" + host + "' order by time desc limit 2", dbName);
+        Query query = new Query("SELECT * FROM metric_data where metric = '" + metric + "' AND host = '" + host + "' order by time desc limit 2", dbName);
         QueryResult result = influxDBTemplate.query(query);
         InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
         List<MetricData> data = resultMapper.toPOJO(result, MetricData.class);
@@ -59,6 +60,9 @@ public class ScoreComputation {
             double instanceScore = 0;
             double weightSum = 0;
             List<MetricScoreDomain> metricScoreDomains = hostMetricScoreDomainMap.get(host);
+            if(CollectionUtils.isEmpty(metricScoreDomains)){
+                continue;
+            }
             for (MetricScoreDomain metricScoreDomain : metricScoreDomains) {
                 instanceScore += metricScoreDomain.getScore() * metricScoreDomain.getWeight();
                 weightSum += metricScoreDomain.getWeight();

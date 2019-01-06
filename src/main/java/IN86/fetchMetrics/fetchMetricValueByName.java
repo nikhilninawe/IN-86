@@ -61,7 +61,7 @@ public class fetchMetricValueByName {
                 metricDetails = new MetricDetails();
                 metricDetails.setMetric(metricName);
                 metricDetails.setValue(value);
-                metricDetails.setEnv("env");
+                metricDetails.setEnv("rehearsal");
                 metricDetails.setRole("orders");
                 metricDetails.setStack("india");
                 metricDetails.setHost(baseMetricUrl);
