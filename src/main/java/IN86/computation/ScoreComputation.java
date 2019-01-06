@@ -1,6 +1,8 @@
 package IN86.computation;
 
+import IN86.domain.InstanceScoreDomain;
 import IN86.fetchMetrics.MetricDetails;
+import IN86.model.InstanceScore;
 import IN86.model.MetricData;
 import IN86.domain.MetricScoreDomain;
 import IN86.model.ApplicationMetricsMetaData;
@@ -32,7 +34,9 @@ public class ScoreComputation {
 
     String dbName = "telegraf";
 
-    public MetricScoreDomain computeMetricScore(String metric, String host) {
+    public MetricScoreDomain computeMetricScore(MetricDetails metricDetails) {
+        String metric = metricDetails.getMetric();
+        String host = metricDetails.getHost();
         ApplicationMetricsMetaData metricsMetaData = metricsMetaDataRepo.findApplicationMetricsMetaDataByMetric(metric);
         Query query = new Query("SELECT * FROM metric_data where host = '" + host + "' order by time desc limit 2", dbName);
         QueryResult result = influxDBTemplate.query(query);
@@ -45,11 +49,12 @@ public class ScoreComputation {
             currentValue = data.get(0).getValue() - data.get(1).getValue();
         }
         double score = (currentValue - metricsMetaData.getGoodValue()) / (metricsMetaData.getCriticalValue() - metricsMetaData.getGoodValue());
-        return new MetricScoreDomain(metric, metricsMetaData.getWeight(), score);
+        return new MetricScoreDomain(metric, metricsMetaData.getWeight(), score, metricDetails.getEnv(),
+                metricDetails.getRole(), metricDetails.getStack(), metricDetails.getHost());
     }
 
-    public Map<String, Double> computeInstanceScore(Map<String, List<MetricScoreDomain>> hostMetricScoreDomainMap) {
-        Map<String, Double> instanceScoreMap = new HashMap<>();
+    public Map<String, InstanceScoreDomain> computeInstanceScore(Map<String, List<MetricScoreDomain>> hostMetricScoreDomainMap) {
+        Map<String, InstanceScoreDomain> instanceScoreMap = new HashMap<>();
         for (String host : hostMetricScoreDomainMap.keySet()) {
             double instanceScore = 0;
             double weightSum = 0;
@@ -59,7 +64,9 @@ public class ScoreComputation {
                 weightSum += metricScoreDomain.getWeight();
             }
             instanceScore = instanceScore / weightSum;
-            instanceScoreMap.put(host, instanceScore);
+            MetricScoreDomain baseMetricScoreDomain = metricScoreDomains.get(0);
+            instanceScoreMap.put(host, new InstanceScoreDomain(instanceScore, baseMetricScoreDomain.getEnv(),
+                    baseMetricScoreDomain.getRole(), baseMetricScoreDomain.getStack(), baseMetricScoreDomain.getHost()));
 
         }
         return instanceScoreMap;

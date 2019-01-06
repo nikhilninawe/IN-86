@@ -1,6 +1,7 @@
 package IN86.fetchMetrics;
 
 import IN86.computation.ScoreComputation;
+import IN86.domain.InstanceScoreDomain;
 import IN86.domain.MetricScoreDomain;
 import IN86.main.Application;
 import org.influxdb.dto.Point;
@@ -9,11 +10,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.influxdb.InfluxDBTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-
+@Component
 public class FetchMetricsService {
 
     @Autowired
@@ -26,7 +28,7 @@ public class FetchMetricsService {
 
     private Map<String, List<MetricScoreDomain>> hostMetricScoreMap;
 
-    @Scheduled(fixedRate = 1000*60)
+    @Scheduled(fixedRate = 1000*5)
     public void populateMetricDetailsToInflux(){
         logger.info("Inside populateMetricDetailsToInflux method");
 
@@ -41,7 +43,8 @@ public class FetchMetricsService {
         List<MetricDetails> gcMetricDetails = fetchMetricValueByName.fetchMajorGCMetric();
         writeMetricDetailsToInflux(gcMetricDetails);
 
-        writeInstancecScoreToInflux();
+        writeInstanceScoreToInflux();
+        logger.info("End of populateMetricDetailsToInflux method");
     }
 
     private void writeMetricDetailsToInflux(List<MetricDetails> metricDetailsList) {
@@ -63,17 +66,16 @@ public class FetchMetricsService {
     }
 
     private void writeMetricScoreToInflux(MetricDetails metricDetails) {
-        MetricScoreDomain metricScoreDomain = scoreComputation.computeMetricScore(metricDetails.getMetric(),
-                metricDetails.getHost());
+        MetricScoreDomain metricScoreDomain = scoreComputation.computeMetricScore(metricDetails);
 
         Point metricPoint = Point.measurement("metric_score")
                 .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
                 .addField("score", metricScoreDomain.getScore())
                 .tag("metric", metricScoreDomain.getMetric())
-                .tag("env", metricDetails.getEnv())
-                .tag("role", metricDetails.getRole())
-                .tag("stack", metricDetails.getStack())
-                .tag("host", metricDetails.getHost())
+                .tag("env", metricScoreDomain.getEnv())
+                .tag("role", metricScoreDomain.getRole())
+                .tag("stack", metricScoreDomain.getStack())
+                .tag("host", metricScoreDomain.getHost())
                 .build();
         influxDBTemplate.write(metricPoint);
 
@@ -86,15 +88,16 @@ public class FetchMetricsService {
         hostMetricScoreMap.put(metricDetails.getHost(), metricScoreDomainList);
     }
 
-    private void writeInstancecScoreToInflux() {
-        Map<String, Double> instanceScoreMap = scoreComputation.computeInstanceScore(hostMetricScoreMap);
+    private void writeInstanceScoreToInflux() {
+        Map<String, InstanceScoreDomain> instanceScoreMap = scoreComputation.computeInstanceScore(hostMetricScoreMap);
         for(String host : instanceScoreMap.keySet() ) {
+            InstanceScoreDomain instanceDetails = instanceScoreMap.get(host);
             Point metricPoint = Point.measurement("instance_score")
                     .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
-                    .addField("score", instanceScoreMap.get(host))
-                    .tag("env", "rehearsal")
-                    .tag("role", "orders")
-                    .tag("stack", "india")
+                    .addField("score", instanceDetails.getScore())
+                    .tag("env", instanceDetails.getEnv())
+                    .tag("role", instanceDetails.getRole())
+                    .tag("stack", instanceDetails.getStack())
                     .tag("host", host)
                     .build();
             influxDBTemplate.write(metricPoint);

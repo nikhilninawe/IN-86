@@ -9,7 +9,6 @@ import java.time.Instant;
 @Data
 @Measurement(name = "metric_score")
 public class MetricScore {
-
     private Instant time;
     private String metric;
     private double score;
