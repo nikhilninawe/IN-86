@@ -1,6 +1,7 @@
 package IN86.computation;
 
 import IN86.domain.InstanceScoreDomain;
+import IN86.domain.ServiceScoreDomain;
 import IN86.fetchMetrics.MetricDetails;
 import IN86.model.InstanceScore;
 import IN86.model.MetricData;
@@ -18,9 +19,7 @@ import org.springframework.data.influxdb.InfluxDBTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class ScoreComputation {
@@ -76,9 +75,36 @@ public class ScoreComputation {
         return instanceScoreMap;
     }
 
-    public double computeServiceScore() {
+    public Map<String, ServiceScoreDomain> computeServiceScore(Map<String, InstanceScoreDomain> instanceScoreMap) {
+        Map<String, ServiceScoreDomain> serviceScoreMap = new HashMap<>();
+        Map<String, List<InstanceScoreDomain>> serviceInstanceScoreMap = new HashMap<>();
 
-        return 0;
+        for (String host: instanceScoreMap.keySet()) {
+            InstanceScoreDomain instanceScoreDomain = instanceScoreMap.get(host);
+            List<InstanceScoreDomain> instanceScoreDomainList = serviceInstanceScoreMap.get(instanceScoreDomain.getRole());
+            if (Objects.isNull(instanceScoreDomainList)) {
+                instanceScoreDomainList = new ArrayList<>();
+            }
+
+            instanceScoreDomainList.add(instanceScoreDomain);
+            serviceInstanceScoreMap.put(instanceScoreDomain.getRole(), instanceScoreDomainList);
+        }
+
+        for (String role: serviceInstanceScoreMap.keySet()) {
+            List<InstanceScoreDomain> instanceScoreDomainList = serviceInstanceScoreMap.get(role);
+            if (CollectionUtils.isEmpty(instanceScoreDomainList)) {
+                continue;
+            }
+            double serviceScore = 0;
+            for (InstanceScoreDomain instanceScoreDomain: instanceScoreDomainList) {
+                serviceScore += instanceScoreDomain.getScore();
+            }
+            serviceScore = serviceScore/instanceScoreDomainList.size();
+            InstanceScoreDomain baseInstanceScoreDomain = instanceScoreDomainList.get(0);
+            serviceScoreMap.put(role, new ServiceScoreDomain(serviceScore, baseInstanceScoreDomain.getEnv(),
+                    baseInstanceScoreDomain.getRole(), baseInstanceScoreDomain.getStack()));
+        }
+        return serviceScoreMap;
     }
 
 }

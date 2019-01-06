@@ -4,6 +4,7 @@ import IN86.computation.DecisionEngine;
 import IN86.computation.ScoreComputation;
 import IN86.domain.InstanceScoreDomain;
 import IN86.domain.MetricScoreDomain;
+import IN86.domain.ServiceScoreDomain;
 import IN86.main.Application;
 import org.influxdb.dto.Point;
 import org.slf4j.Logger;
@@ -31,12 +32,16 @@ public class FetchMetricsService {
     private static final Logger logger = LoggerFactory.getLogger(Application.class);
 
     private Map<String, List<MetricScoreDomain>> hostMetricScoreMap;
+    private Map<String, InstanceScoreDomain> instanceScoreMap;
+    private Map<String, ServiceScoreDomain> serviceScoreMap;
 
     @Scheduled(fixedRate = 1000*5)
     public void populateMetricDetailsToInflux(){
         logger.info("Inside populateMetricDetailsToInflux method");
 
         hostMetricScoreMap = new HashMap<>();
+        instanceScoreMap = new HashMap<>();
+        serviceScoreMap = new HashMap<>();
 
         List<MetricDetails> cpuMetricDetails = fetchMetricValueByName.fetchCPUUsageMetric();
         writeMetricDetailsToInflux(cpuMetricDetails);
@@ -48,6 +53,8 @@ public class FetchMetricsService {
         writeMetricDetailsToInflux(gcMetricDetails);
 
         writeInstanceScoreToInflux();
+        writeServiceScoreToInflux();
+
         logger.info("End of populateMetricDetailsToInflux method");
     }
 
@@ -93,19 +100,35 @@ public class FetchMetricsService {
     }
 
     private void writeInstanceScoreToInflux() {
-        Map<String, InstanceScoreDomain> instanceScoreMap = scoreComputation.computeInstanceScore(hostMetricScoreMap);
+        instanceScoreMap = scoreComputation.computeInstanceScore(hostMetricScoreMap);
         for(String host : instanceScoreMap.keySet() ) {
-            InstanceScoreDomain instanceDetails = instanceScoreMap.get(host);
+            InstanceScoreDomain instanceScoreDetails = instanceScoreMap.get(host);
             Point metricPoint = Point.measurement("instance_score")
                     .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
-                    .addField("score", instanceDetails.getScore())
-                    .tag("env", instanceDetails.getEnv())
-                    .tag("role", instanceDetails.getRole())
-                    .tag("stack", instanceDetails.getStack())
+                    .addField("score", instanceScoreDetails.getScore())
+                    .tag("env", instanceScoreDetails.getEnv())
+                    .tag("role", instanceScoreDetails.getRole())
+                    .tag("stack", instanceScoreDetails.getStack())
                     .tag("host", host)
                     .build();
             influxDBTemplate.write(metricPoint);
-            decisionEngine.makeDecision(host, instanceDetails.getScore());
+            decisionEngine.makeDecision(host, instanceScoreDetails.getScore());
         }
+    }
+
+    private void writeServiceScoreToInflux() {
+        serviceScoreMap = scoreComputation.computeServiceScore(instanceScoreMap);
+        for(String role : serviceScoreMap.keySet() ) {
+            ServiceScoreDomain serviceScoreDetails = serviceScoreMap.get(role);
+            Point metricPoint = Point.measurement("service_score")
+                    .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                    .addField("score", serviceScoreDetails.getScore())
+                    .tag("env", serviceScoreDetails.getEnv())
+                    .tag("role", serviceScoreDetails.getRole())
+                    .tag("stack", serviceScoreDetails.getStack())
+                    .build();
+            influxDBTemplate.write(metricPoint);
+        }
+
     }
 }
