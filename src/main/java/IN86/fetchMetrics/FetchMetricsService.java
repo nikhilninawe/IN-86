@@ -1,5 +1,6 @@
 package IN86.fetchMetrics;
 
+import IN86.computation.DecisionEngine;
 import IN86.computation.ScoreComputation;
 import IN86.domain.InstanceScoreDomain;
 import IN86.domain.MetricScoreDomain;
@@ -23,6 +24,9 @@ public class FetchMetricsService {
 
     @Autowired
     private InfluxDBTemplate<Point> influxDBTemplate;
+
+    @Autowired
+    private DecisionEngine decisionEngine;
 
     private static final Logger logger = LoggerFactory.getLogger(Application.class);
 
@@ -101,6 +105,7 @@ public class FetchMetricsService {
                     .tag("host", host)
                     .build();
             influxDBTemplate.write(metricPoint);
+            decisionEngine.makeDecision(host, instanceDetails.getScore());
         }
     }
 }
