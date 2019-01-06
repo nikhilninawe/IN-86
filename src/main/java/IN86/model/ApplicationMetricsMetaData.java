@@ -1,7 +1,9 @@
 package IN86.model;
 
 import lombok.Data;
+import org.hibernate.annotations.Type;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -18,7 +20,5 @@ public class ApplicationMetricsMetaData {
     private long goodValue;
     private long criticalValue;
     private long weight;
-    private boolean linear; // cpu is linear, but gc is not
-
-
+    private boolean simple; // cpu is linear, but gc is not
 }

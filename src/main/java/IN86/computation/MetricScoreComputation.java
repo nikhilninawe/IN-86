@@ -39,7 +39,7 @@ public class MetricScoreComputation {
         InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
         List<MetricData> data = resultMapper.toPOJO(result, MetricData.class);
         double currentValue;
-        if (metricsMetaData.isLinear()) {
+        if (metricsMetaData.isSimple()) {
             currentValue = data.get(0).getValue();
         }else{
             currentValue = data.get(0).getValue() - data.get(1).getValue();
