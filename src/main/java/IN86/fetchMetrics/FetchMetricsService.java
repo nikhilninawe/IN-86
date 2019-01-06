@@ -35,9 +35,9 @@ public class FetchMetricsService {
     private Map<String, InstanceScoreDomain> instanceScoreMap;
     private Map<String, ServiceScoreDomain> serviceScoreMap;
 
-    @Scheduled(fixedRate = 1000*5)
+    @Scheduled(fixedRate = 1000*20)
     public void populateMetricDetailsToInflux(){
-        logger.info("Inside populateMetricDetailsToInflux method");
+//        logger.info("Inside populateMetricDetailsToInflux method");
 
         hostMetricScoreMap = new HashMap<>();
         instanceScoreMap = new HashMap<>();
@@ -55,7 +55,7 @@ public class FetchMetricsService {
         writeInstanceScoreToInflux();
         writeServiceScoreToInflux();
 
-        logger.info("End of populateMetricDetailsToInflux method");
+//        logger.info("End of populateMetricDetailsToInflux method");
     }
 
     private void writeMetricDetailsToInflux(List<MetricDetails> metricDetailsList) {
