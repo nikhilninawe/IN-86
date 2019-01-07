@@ -1,5 +1,6 @@
 package IN86.computation;
 
+import IN86.domain.MetricScoreDomain;
 import IN86.main.Application;
 import net.gpedro.integrations.slack.SlackApi;
 import net.gpedro.integrations.slack.SlackMessage;
@@ -10,6 +11,9 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Component
@@ -20,13 +24,22 @@ public class DecisionEngineActions {
 
     private static final Logger logger = LoggerFactory.getLogger(DecisionEngineActions.class);
 
-
-    public void sendAlert(String instance, double score){
-        slackApi.call(new SlackMessage("Score for instance " + instance + " is " + score));
+    private Map<String, Double> getMetricScoreMap(List<MetricScoreDomain> metricScoreDomains){
+        Map<String, Double> map = new HashMap<>();
+        for (MetricScoreDomain metric : metricScoreDomains ){
+            map.put(metric.getMetric(), metric.getScore());
+        }
+        return map;
     }
 
-    public void quarantine(String instance, double score){
-        slackApi.call(new SlackMessage("Quarantining instance " + instance + ". Its score is " + score));
+    public void sendAlert(String instance, double score, List<MetricScoreDomain> metricScoreDomains){
+        slackApi.call(new SlackMessage("Score for instance " + instance + " is " + score  +
+                ".\nIndividual metric score is \n:" + getMetricScoreMap(metricScoreDomains) ));
+    }
+
+    public void quarantine(String instance, double score, List<MetricScoreDomain> metricScoreDomains){
+        slackApi.call(new SlackMessage("Quarantining instance " + instance + ". Its score is " + score  +
+                ".\nIndividual metric scores are :- \n" + getMetricScoreMap(metricScoreDomains)));
         ClassLoader classLoader = DecisionEngineActions.class.getClassLoader();
         String fileName = "quarantine.sh";
         File file = new File(classLoader.getResource(fileName).getFile());
@@ -45,10 +58,5 @@ public class DecisionEngineActions {
         if(Objects.nonNull(p)) {
             logger.info("Exit value" + p.exitValue());
         }
-    }
-
-    public static void main(String[] args){
-        DecisionEngineActions actions = new DecisionEngineActions();
-        actions.quarantine("I1", 1.2);
     }
 }

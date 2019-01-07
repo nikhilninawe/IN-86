@@ -4,6 +4,7 @@ import IN86.domain.InstanceScoreDomain;
 import IN86.domain.MeasurementType;
 import IN86.domain.ServiceScoreDomain;
 import IN86.fetchMetrics.MetricDetails;
+import IN86.main.AppConfiguration;
 import IN86.model.InstanceScore;
 import IN86.model.MetricData;
 import IN86.domain.MetricScoreDomain;
@@ -66,9 +67,9 @@ public class ScoreComputation {
 
     public String getQuery(String metric, String host){
         switch (metric){
-            case "jvm_gc_pause": return "SELECT sum(count) FROM jvm_gc_pause where host = '" + host + "' AND time > '" + Instant.now().minusSeconds(60) + "'";
-            case "system_cpu_usage": return  "SELECT value from system_cpu_usage where host = '" + host + "' AND  time > '" + Instant.now().minusSeconds(60) + "' order by time desc limit 1";
-            case "log4j2_events": return "select sum(value) from log4j2_events where host = '" + host + "' AND time > '" + Instant.now().minusSeconds(60) + "'";
+            case "jvm_gc_pause": return "SELECT sum(count) FROM jvm_gc_pause where host = '" + host + "' AND time > '" + Instant.now().minusSeconds(AppConfiguration.time_frame) + "'";
+            case "system_cpu_usage": return  "SELECT value from system_cpu_usage where host = '" + host + "' AND  time > '" + Instant.now().minusSeconds(AppConfiguration.time_frame) + "' order by time desc limit 1";
+            case "log4j2_events": return "select sum(value) from log4j2_events where host = '" + host + "' AND time > '" + Instant.now().minusSeconds(AppConfiguration.time_frame) + "'";
             default: return "";
         }
 

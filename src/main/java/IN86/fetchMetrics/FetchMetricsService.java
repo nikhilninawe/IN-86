@@ -118,7 +118,7 @@ public class FetchMetricsService {
                     .tag("host", host)
                     .build();
             influxDBTemplate.write(metricPoint);
-            decisionEngine.makeDecision(host, instanceScoreDetails.getScore());
+            decisionEngine.makeDecision(host, instanceScoreDetails.getScore(), hostMetricScoreMap.get(host));
         }
     }
 
@@ -137,7 +137,7 @@ public class FetchMetricsService {
         }
     }
 
-    @Scheduled(fixedRate = 1000*60)
+    @Scheduled(fixedRate = 1000 * AppConfiguration.time_frame)
     public void computeMetricScore(){
         hostMetricScoreMap = new HashMap<>();
         instanceScoreMap = new HashMap<>();

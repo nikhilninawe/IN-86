@@ -11,6 +11,7 @@ public class AppConfiguration {
     public static final String[] BASE_METRICS_URLS = { "http://192.168.1.87:9004", "http://192.168.1.87:9010" };
     public static final String[] hosts = {"Turvo-nikhil.n"};
     public static final String[] metrics = {"cpu", "gc", "errors"};
+    public static final int time_frame = 30;
 
     @Bean
     public SlackApi slackApi(){
