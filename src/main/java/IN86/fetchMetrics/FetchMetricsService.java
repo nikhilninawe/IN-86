@@ -2,11 +2,13 @@ package IN86.fetchMetrics;
 
 import IN86.computation.DecisionEngine;
 import IN86.computation.ScoreComputation;
+import IN86.domain.InstanceHostMapping;
 import IN86.domain.InstanceScoreDomain;
 import IN86.domain.MetricScoreDomain;
 import IN86.domain.ServiceScoreDomain;
 import IN86.main.AppConfiguration;
 import IN86.main.Application;
+import IN86.repository.InstanceHostMappingRepository;
 import org.influxdb.dto.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +31,9 @@ public class FetchMetricsService {
 
     @Autowired
     private DecisionEngine decisionEngine;
+
+    @Autowired
+    private InstanceHostMappingRepository instanceHostMappingRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(Application.class);
 
@@ -138,7 +143,8 @@ public class FetchMetricsService {
         instanceScoreMap = new HashMap<>();
         serviceScoreMap = new HashMap<>();
 
-        for (String host : AppConfiguration.hosts) {
+        for (InstanceHostMapping instanceHostMapping : getInstanceHostMappings()) {
+            String host = instanceHostMapping.getIp();
             for (String metric : AppConfiguration.metrics) {
                 MetricDetails metricDetails = new MetricDetails();
                 metricDetails.setHost(host);
@@ -152,4 +158,9 @@ public class FetchMetricsService {
         writeInstanceScoreToInflux();
         writeServiceScoreToInflux();
     }
+
+    public List<InstanceHostMapping> getInstanceHostMappings(){
+        return instanceHostMappingRepository.findByQurantinedFalse();
+    }
+
 }
