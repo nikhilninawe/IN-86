@@ -9,6 +9,7 @@ import IN86.domain.ServiceScoreDomain;
 import IN86.main.AppConfiguration;
 import IN86.main.Application;
 import IN86.repository.InstanceHostMappingRepository;
+import org.apache.commons.math3.util.Precision;
 import org.influxdb.dto.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,7 +115,7 @@ public class FetchMetricsService {
                     .tag("host", host)
                     .build();
             influxDBTemplate.write(metricPoint);
-            decisionEngine.makeDecision(host, instanceScoreDetails.getScore(), hostMetricScoreMap.get(host));
+            decisionEngine.makeDecision(host, Precision.round(instanceScoreDetails.getScore(), 2), hostMetricScoreMap.get(host));
         }
     }
 
@@ -133,7 +134,7 @@ public class FetchMetricsService {
         }
     }
 
-    @Scheduled(fixedRate = 1000 * AppConfiguration.time_frame)
+    @Scheduled(fixedRate = 1000 * 20)
     public void computeMetricScore(){
         hostMetricScoreMap = new HashMap<>();
         instanceScoreMap = new HashMap<>();

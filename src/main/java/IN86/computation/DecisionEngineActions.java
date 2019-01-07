@@ -4,6 +4,7 @@ import IN86.domain.MetricScoreDomain;
 import IN86.main.Application;
 import net.gpedro.integrations.slack.SlackApi;
 import net.gpedro.integrations.slack.SlackMessage;
+import org.apache.commons.math3.util.Precision;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,14 +28,14 @@ public class DecisionEngineActions {
     private Map<String, Double> getMetricScoreMap(List<MetricScoreDomain> metricScoreDomains){
         Map<String, Double> map = new HashMap<>();
         for (MetricScoreDomain metric : metricScoreDomains ){
-            map.put(metric.getMetric(), metric.getScore());
+            map.put(metric.getMetric(), Precision.round(metric.getScore(), 2));
         }
         return map;
     }
 
     public void sendAlert(String instance, double score, List<MetricScoreDomain> metricScoreDomains){
-        slackApi.call(new SlackMessage("Score for instance " + instance + " is " + score  +
-                ".\nIndividual metric score is \n:" + getMetricScoreMap(metricScoreDomains) ));
+        slackApi.call(new SlackMessage("Score for instance " + instance + " is " + score +
+                ".\nIndividual metric scores are :\n" + getMetricScoreMap(metricScoreDomains) ));
     }
 
     public void sendAlertWithPeakCount(String instance, int peakCount){
