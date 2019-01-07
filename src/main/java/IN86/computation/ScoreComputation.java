@@ -1,6 +1,7 @@
 package IN86.computation;
 
 import IN86.domain.InstanceScoreDomain;
+import IN86.domain.MeasurementType;
 import IN86.domain.ServiceScoreDomain;
 import IN86.fetchMetrics.MetricDetails;
 import IN86.model.InstanceScore;
@@ -19,6 +20,7 @@ import org.springframework.data.influxdb.InfluxDBTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.time.Instant;
 import java.util.*;
 
 @Component
@@ -34,6 +36,15 @@ public class ScoreComputation {
 
     String dbName = "telegraf";
 
+    public MeasurementType getMeasurementName(String metric){
+        switch (metric){
+            case "gc": return new MeasurementType("jvm_gc_pause", "timing");
+            case "cpu": return new MeasurementType("system_cpu_usage", "gauge");
+            case "errors": return new MeasurementType("log4j2_events", "counter");
+            default: return null;
+        }
+    }
+
     public MetricScoreDomain computeMetricScore(MetricDetails metricDetails) {
         String metric = metricDetails.getMetric();
         String host = metricDetails.getHost();
@@ -48,6 +59,38 @@ public class ScoreComputation {
         } else {
             currentValue = data.get(0).getValue() - data.get(1).getValue();
         }
+        double score = (currentValue - metricsMetaData.getGoodValue()) / (metricsMetaData.getCriticalValue() - metricsMetaData.getGoodValue());
+        return new MetricScoreDomain(metric, metricsMetaData.getWeight(), score, metricDetails.getEnv(),
+                metricDetails.getRole(), metricDetails.getStack(), metricDetails.getHost());
+    }
+
+    public String getQuery(String metric, String host){
+        switch (metric){
+            case "jvm_gc_pause": return "SELECT sum(count) FROM jvm_gc_pause where host = '" + host + "' AND time > '" + Instant.now().minusSeconds(60) + "'";
+            case "system_cpu_usage": return  "SELECT value from system_cpu_usage where host = '" + host + "' AND  time > '" + Instant.now().minusSeconds(60) + "' order by time desc limit 1";
+            case "log4j2_events": return "select sum(value) from log4j2_events where host = '" + host + "' AND time > '" + Instant.now().minusSeconds(60) + "'";
+            default: return "";
+        }
+
+    }
+
+    public MetricScoreDomain computeMetricScoreInflux(MetricDetails metricDetails) {
+        String metric = metricDetails.getMetric();
+        String host = metricDetails.getHost();
+        ApplicationMetricsMetaData metricsMetaData = metricsMetaDataRepo.findApplicationMetricsMetaDataByMetric(metric);
+        MeasurementType measurementType = getMeasurementName(metricDetails.getMetric());
+        String queryString = getQuery(measurementType.getMeasurment(), host);
+        Query query = new Query(queryString, dbName);
+        QueryResult result = influxDBTemplate.query(query);
+        double currentValue = 0;
+        try {
+            if(!CollectionUtils.isEmpty(result.getResults().get(0).getSeries())) {
+                currentValue = (double) result.getResults().get(0).getSeries().get(0).getValues().get(0).get(1);
+            }
+        }catch (Exception ex){
+            log.error("Error while computing metric score for result " + result);
+        }
+
         double score = (currentValue - metricsMetaData.getGoodValue()) / (metricsMetaData.getCriticalValue() - metricsMetaData.getGoodValue());
         return new MetricScoreDomain(metric, metricsMetaData.getWeight(), score, metricDetails.getEnv(),
                 metricDetails.getRole(), metricDetails.getStack(), metricDetails.getHost());

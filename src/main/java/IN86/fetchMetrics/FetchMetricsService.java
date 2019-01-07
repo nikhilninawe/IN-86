@@ -5,6 +5,7 @@ import IN86.computation.ScoreComputation;
 import IN86.domain.InstanceScoreDomain;
 import IN86.domain.MetricScoreDomain;
 import IN86.domain.ServiceScoreDomain;
+import IN86.main.AppConfiguration;
 import IN86.main.Application;
 import org.influxdb.dto.Point;
 import org.slf4j.Logger;
@@ -35,7 +36,7 @@ public class FetchMetricsService {
     private Map<String, InstanceScoreDomain> instanceScoreMap;
     private Map<String, ServiceScoreDomain> serviceScoreMap;
 
-    @Scheduled(fixedRate = 1000*20)
+//    @Scheduled(fixedRate = 1000*20)
     public void populateMetricDetailsToInflux(){
 //        logger.info("Inside populateMetricDetailsToInflux method");
 
@@ -77,7 +78,7 @@ public class FetchMetricsService {
     }
 
     private void writeMetricScoreToInflux(MetricDetails metricDetails) {
-        MetricScoreDomain metricScoreDomain = scoreComputation.computeMetricScore(metricDetails);
+        MetricScoreDomain metricScoreDomain = scoreComputation.computeMetricScoreInflux(metricDetails);
 
         Point metricPoint = Point.measurement("metric_score")
                 .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
@@ -129,6 +130,26 @@ public class FetchMetricsService {
                     .build();
             influxDBTemplate.write(metricPoint);
         }
+    }
 
+    @Scheduled(fixedRate = 1000*60)
+    public void computeMetricScore(){
+        hostMetricScoreMap = new HashMap<>();
+        instanceScoreMap = new HashMap<>();
+        serviceScoreMap = new HashMap<>();
+
+        for (String host : AppConfiguration.hosts) {
+            for (String metric : AppConfiguration.metrics) {
+                MetricDetails metricDetails = new MetricDetails();
+                metricDetails.setHost(host);
+                metricDetails.setMetric(metric);
+                metricDetails.setEnv("union");
+                metricDetails.setRole("orders");
+                metricDetails.setStack("charlie");
+                writeMetricScoreToInflux(metricDetails);
+            }
+        }
+        writeInstanceScoreToInflux();
+        writeServiceScoreToInflux();
     }
 }
