@@ -37,6 +37,10 @@ public class DecisionEngineActions {
                 ".\nIndividual metric score is \n:" + getMetricScoreMap(metricScoreDomains) ));
     }
 
+    public void sendAlertWithPeakCount(String instance, int peakCount){
+        slackApi.call(new SlackMessage(String.format("Number of continuous peaks for %s: %s", instance, peakCount)));
+    }
+
     public void quarantine(String instance, double score, List<MetricScoreDomain> metricScoreDomains){
         slackApi.call(new SlackMessage("Quarantining instance " + instance + ". Its score is " + score  +
                 ".\nIndividual metric scores are :- \n" + getMetricScoreMap(metricScoreDomains)));
