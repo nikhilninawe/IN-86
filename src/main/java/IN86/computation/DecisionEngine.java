@@ -2,7 +2,6 @@ package IN86.computation;
 
 import IN86.domain.InstanceHostMapping;
 import IN86.domain.MetricScoreDomain;
-import IN86.main.Application;
 import IN86.repository.InstanceHostMappingRepository;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.slf4j.Logger;
@@ -23,7 +22,7 @@ public class DecisionEngine {
     @Autowired
     InstanceHostMappingRepository instanceHostMappingRepository;
     double threshold = 1;
-    private final int NO_OF_CONTINUOUS_PEAKS = 3;
+    private final int MAX_NO_OF_CONTINUOUS_PEAKS = 3;
 
     private Map<String, CircularFifoQueue<Integer>> instanceContinuousAlertMapping = new HashMap<>();
 
@@ -47,7 +46,7 @@ public class DecisionEngine {
             }
 
             // Quarantine only when we have three continuous alerts.
-            if (sum == NO_OF_CONTINUOUS_PEAKS) {
+            if (sum == MAX_NO_OF_CONTINUOUS_PEAKS) {
                 decisionEngineActions.quarantine(instanceHostMapping.getInstanceId(), score, metricScoreDomains);
                 instanceHostMapping.setQurantined(true);
                 instanceHostMappingRepository.save(instanceHostMapping);
