@@ -34,7 +34,7 @@ public class DecisionEngine {
         CircularFifoQueue<Integer> instanceCircularFifoQueue = instanceContinuousAlertMapping.get(ipAddress);
 
         if (Objects.isNull(instanceCircularFifoQueue)) {
-            instanceCircularFifoQueue = new CircularFifoQueue<>(3);
+            instanceCircularFifoQueue = new CircularFifoQueue<>(MAX_NO_OF_CONTINUOUS_PEAKS);
         }
 
         if (score >  threshold){

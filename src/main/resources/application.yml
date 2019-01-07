@@ -1,6 +1,6 @@
 spring:
   influxdb:
-    url: http://localhost:8086
+    url: http://influxdb.turvo.net:8086
     username: " "
     password: " "
     database: telegraf

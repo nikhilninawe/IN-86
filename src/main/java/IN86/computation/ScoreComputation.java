@@ -69,7 +69,7 @@ public class ScoreComputation {
         switch (metric){
             case "jvm_gc_pause": return "SELECT sum(count) FROM jvm_gc_pause where host = '" + host + "' AND time > '" + Instant.now().minusSeconds(AppConfiguration.time_frame) + "'";
             case "system_cpu_usage": return  "SELECT value from system_cpu_usage where host = '" + host + "' AND  time > '" + Instant.now().minusSeconds(AppConfiguration.time_frame) + "' order by time desc limit 1";
-            case "log4j2_events": return "select sum(value) from log4j2_events where host = '" + host + "' AND time > '" + Instant.now().minusSeconds(AppConfiguration.time_frame) + "'";
+            case "log4j2_events": return "select sum(value) from log4j2_events where level = 'error' AND host = '" + host + "' AND time > '" + Instant.now().minusSeconds(AppConfiguration.time_frame) + "'";
             default: return "";
         }
 
