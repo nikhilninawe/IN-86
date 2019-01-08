@@ -36,6 +36,7 @@ public class ScoreComputation {
     private static final Logger log = LoggerFactory.getLogger(ScoreComputation.class);
 
     String dbName = "telegraf";
+    Map<String, Instant> metricLastTimeStampMap = new HashMap<>();
 
     public MeasurementType getMeasurementName(String metric){
         switch (metric){
@@ -65,12 +66,16 @@ public class ScoreComputation {
                 metricDetails.getRole(), metricDetails.getStack(), metricDetails.getHost());
     }
 
-    public String getQuery(String metric, String host){
-        switch (metric){
-            case "jvm_gc_pause": return "SELECT sum(count) FROM jvm_gc_pause where host = '" + host + "' AND time > '" + Instant.now().minusSeconds(AppConfiguration.time_frame) + "'";
-            case "system_cpu_usage": return  "SELECT value from system_cpu_usage where host = '" + host + "' AND  time > '" + Instant.now().minusSeconds(AppConfiguration.time_frame) + "' order by time desc limit 1";
-            case "log4j2_events": return "select sum(value) from log4j2_events where level = 'error' AND host = '" + host + "' AND time > '" + Instant.now().minusSeconds(AppConfiguration.time_frame) + "'";
-            default: return "";
+    public String getQuery(String metric, String host, Instant instant){
+        switch (metric) {
+            case "jvm_gc_pause":
+                return "SELECT sum(count) FROM jvm_gc_pause where host = '" + host + "' AND time > '" + instant.minusSeconds(AppConfiguration.time_frame) + "'";
+            case "system_cpu_usage":
+                return "SELECT mean(value) from system_cpu_usage where host = '" + host + "' AND  time > '" + instant.minusSeconds(AppConfiguration.time_frame) + "'";
+            case "log4j2_events":
+                return "select sum(value) from log4j2_events where level = 'error' AND host = '" + host + "' AND time > '" + instant.minusSeconds(AppConfiguration.time_frame) + "'";
+            default:
+                return "";
         }
 
     }
@@ -78,15 +83,20 @@ public class ScoreComputation {
     public MetricScoreDomain computeMetricScoreInflux(MetricDetails metricDetails) {
         String metric = metricDetails.getMetric();
         String host = metricDetails.getHost();
+        Instant currentInstant = Instant.now();
         ApplicationMetricsMetaData metricsMetaData = metricsMetaDataRepo.findApplicationMetricsMetaDataByMetric(metric);
         MeasurementType measurementType = getMeasurementName(metricDetails.getMetric());
-        String queryString = getQuery(measurementType.getMeasurment(), host);
+        String queryString = getQuery(measurementType.getMeasurment(), host, currentInstant);
+        if(Objects.nonNull(metricLastTimeStampMap.get(metric))){
+            queryString = queryString + " AND time > '" + metricLastTimeStampMap.get(metric) + "'";
+        }
         Query query = new Query(queryString, dbName);
         QueryResult result = influxDBTemplate.query(query);
         double currentValue = 0;
         try {
             if(!CollectionUtils.isEmpty(result.getResults().get(0).getSeries())) {
                 currentValue = (double) result.getResults().get(0).getSeries().get(0).getValues().get(0).get(1);
+                metricLastTimeStampMap.put(metric, currentInstant);
             }
         }catch (Exception ex){
             log.error("Error while computing metric score for result " + result);
