@@ -23,6 +23,7 @@ public class DecisionEngine {
     InstanceHostMappingRepository instanceHostMappingRepository;
     double threshold = 1;
     private final int MAX_NO_OF_CONTINUOUS_PEAKS = 2;
+    static final double METRIC_SCORE_THRESHOLD = 1;
 
     private Map<String, CircularFifoQueue<Integer>> instanceContinuousAlertMapping = new HashMap<>();
 
@@ -45,19 +46,17 @@ public class DecisionEngine {
                 sum += index;
             }
 
+            log.info(String.format("Number of continuous peaks for %s: %s", ipAddress, sum));
+            decisionEngineActions.sendAlert(instanceHostMapping.getInstanceId(), score, metricScoreDomains);
+            decisionEngineActions.sendAlertWithPeakCount(instanceHostMapping.getInstanceId(), sum);
+
             // Quarantine only when we have three continuous alerts.
             if (sum == MAX_NO_OF_CONTINUOUS_PEAKS) {
                 log.info(String.format("Number of continuous peaks for %s: %s", ipAddress, sum));
-                decisionEngineActions.sendAlertWithPeakCount(instanceHostMapping.getInstanceId(), sum);
-                decisionEngineActions.quarantine(instanceHostMapping.getInstanceId(), score, metricScoreDomains);
+                decisionEngineActions.quarantine(instanceHostMapping.getInstanceId());
                 instanceHostMapping.setQurantined(true);
                 instanceHostMappingRepository.save(instanceHostMapping);
-            } else if (sum > 0) {
-                decisionEngineActions.sendAlert(instanceHostMapping.getInstanceId(), score, metricScoreDomains);
-                log.info(String.format("Number of continuous peaks for %s: %s", ipAddress, sum));
-                decisionEngineActions.sendAlertWithPeakCount(instanceHostMapping.getInstanceId(), sum);
             }
-
 
         }else if (score > 0 && score < threshold) {
             instanceCircularFifoQueue.add(0);
