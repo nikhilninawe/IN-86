@@ -134,7 +134,7 @@ public class FetchMetricsService {
         }
     }
 
-    @Scheduled(fixedRate = 1000 * 20)
+    @Scheduled(fixedRate = 1000 * 25)
     public void computeMetricScore(){
         hostMetricScoreMap = new HashMap<>();
         instanceScoreMap = new HashMap<>();

@@ -44,6 +44,7 @@ public class DecisionEngineActions {
         for (MetricScoreDomain metricScoreDomain: metricScoreDomains) {
             double metricScore = metricScoreDomain.getScore();
             SlackAttachment slackAttachment = new SlackAttachment();
+            slackAttachment.setFallback("");
             slackAttachment.setTitle(
                     String.format("%s score: %s", metricScoreDomain.getMetric(),
                             Precision.round(metricScoreDomain.getScore(), 2)));
