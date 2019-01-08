@@ -8,6 +8,7 @@ import org.apache.commons.math3.util.Precision;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -42,6 +43,7 @@ public class DecisionEngineActions {
         slackApi.call(new SlackMessage(String.format("Number of continuous peaks for %s: %s", instance, peakCount)));
     }
 
+    @Async
     public void quarantine(String instance, double score, List<MetricScoreDomain> metricScoreDomains){
         slackApi.call(new SlackMessage("Quarantining instance " + instance + ". Its score is " + score  +
                 ".\nIndividual metric scores are :- \n" + getMetricScoreMap(metricScoreDomains)));
@@ -59,9 +61,6 @@ public class DecisionEngineActions {
         } catch (Exception e) {
             logger.error("Error in Quarantining instance " + instance + ".", e);
             slackApi.call(new SlackMessage("Error in Quarantining instance " + instance + "."));
-        }
-        if(Objects.nonNull(p)) {
-            logger.info("Exit value" + p.exitValue());
         }
     }
 }
