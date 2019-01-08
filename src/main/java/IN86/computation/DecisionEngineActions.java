@@ -37,8 +37,7 @@ public class DecisionEngineActions {
 
     public void sendAlert(String instance, double score, List<MetricScoreDomain> metricScoreDomains){
         SlackMessage slackMessage = new SlackMessage(
-                String.format("Health Engine Score for union-charlie-orders-%s: %s", instance, score));
-
+                String.format(":vertical_traffic_light: Health Engine Score for *union-charlie-orders-%s*: *%s*", instance, score));
         List<SlackAttachment> slackAttachments = new ArrayList<>();
 
         for (MetricScoreDomain metricScoreDomain: metricScoreDomains) {
@@ -48,6 +47,7 @@ public class DecisionEngineActions {
             slackAttachment.setTitle(
                     String.format("%s score: %s", metricScoreDomain.getMetric(),
                             Precision.round(metricScoreDomain.getScore(), 2)));
+            slackAttachment.setTitleLink("http://metrics.turvo.net/dashboard/db/turvo-health-dashboard?refresh=5s&orgId=1");
 
             if (metricScore > METRIC_SCORE_THRESHOLD) {
                 slackAttachment.setColor("danger");
@@ -64,7 +64,7 @@ public class DecisionEngineActions {
     }
 
     public void sendAlertWithPeakCount(String instance, int peakCount){
-        slackApi.call(new SlackMessage(String.format("Number of continuous peaks for %s: %s", instance, peakCount)));
+        slackApi.call(new SlackMessage(String.format("Number of continuous peaks for %s: %s \n %s", instance, peakCount, "http://metrics.turvo.net/dashboard/db/turvo-health-dashboard?refresh=5s&orgId=1")));
     }
 
     @Async
